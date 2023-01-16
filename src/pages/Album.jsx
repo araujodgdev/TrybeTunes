@@ -30,6 +30,10 @@ export default class Album extends Component {
     );
   }
 
+  setLoading = (bool) => {
+    this.setState({ loading: bool });
+  };
+
   handleFavorite = async (e, music) => {
     e.preventDefault();
     this.setState({ loading: true });
@@ -48,6 +52,7 @@ export default class Album extends Component {
           previewUrl={ music.previewUrl }
           music={ music }
           handleFavorite={ this.handleFavorite }
+          setLoading={ this.setLoading }
         />
       ));
     return (

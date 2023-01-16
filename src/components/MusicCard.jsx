@@ -1,19 +1,41 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { getFavoriteSongs } from '../services/favoriteSongsAPI';
 
 export default class MusicCard extends Component {
   state = {
     checked: false,
+    favoriteSongs: [],
   };
 
   componentDidMount() {
+    const { setLoading } = this.props;
+    setLoading(true);
+    this.loadChecked();
+    this.getFavorites();
+    setLoading(false);
+  }
+
+  loadChecked = () => {
     const { music: { trackId } } = this.props;
     const favorites = JSON.parse(localStorage.getItem('favorite_songs'));
     const hasFavorite = favorites.some((music) => music.trackId === trackId);
     if (hasFavorite) {
       this.setState({ checked: true });
     }
-  }
+  };
+
+  getFavorites = async () => {
+    const favorite = await getFavoriteSongs();
+    this.setState({ favoriteSongs: [...favorite] }, () => {
+      const { favoriteSongs } = this.state;
+      const { music: { trackId } } = this.props;
+      const hasFavorite = favoriteSongs.some((music) => music.trackId === trackId);
+      if (hasFavorite) {
+        this.setState({ checked: true });
+      }
+    });
+  };
 
   handleCheckbox = (e) => {
     const { music, handleFavorite } = this.props;
@@ -54,4 +76,5 @@ MusicCard.propTypes = {
     trackId: PropTypes.number,
   }).isRequired,
   handleFavorite: PropTypes.func.isRequired,
+  setLoading: PropTypes.func.isRequired,
 };
