@@ -5,10 +5,12 @@ import Loading from '../components/Loading';
 import { getUser } from '../services/userAPI';
 import getMusics from '../services/musicsAPI';
 import MusicCard from '../components/MusicCard';
+import { addSong } from '../services/favoriteSongsAPI';
 
 export default class Album extends Component {
   state = {
-    loading: true,
+    loadingHeader: true,
+    loading: false,
     userName: '',
     musics: [],
     albumInfo: {},
@@ -24,12 +26,19 @@ export default class Album extends Component {
     const musicsResult = await getMusics(id);
     this.setState(
       { userName: user.name, musics: musicsResult, albumInfo: musicsResult[0] },
-      () => this.setState({ loading: false }),
+      () => this.setState({ loadingHeader: false }),
     );
   }
 
+  handleFavorite = async (e, music) => {
+    e.preventDefault();
+    this.setState({ loading: true });
+    await addSong(music);
+    this.setState({ loading: false });
+  };
+
   render() {
-    const { loading, userName, musics, albumInfo } = this.state;
+    const { loading, userName, musics, albumInfo, loadingHeader } = this.state;
     const musicsList = musics
       .filter((music, _i, arr) => arr.indexOf(music) > 0)
       .map((music) => (
@@ -37,15 +46,23 @@ export default class Album extends Component {
           key={ music.trackId }
           trackName={ music.trackName }
           previewUrl={ music.previewUrl }
+          music={ music }
+          handleFavorite={ this.handleFavorite }
         />
       ));
     return (
       <div data-testid="page-album">
-        {loading ? <Loading /> : <Header userName={ userName } />}
-        <img src={ albumInfo.artworkUrl100 } alt={ albumInfo.collectionName } />
-        <h2 data-testid="album-name">{albumInfo.collectionName}</h2>
-        <h3 data-testid="artist-name">{albumInfo.artistName}</h3>
-        {musicsList}
+        {loadingHeader ? <Loading /> : <Header userName={ userName } />}
+        {loading ? (
+          <Loading />
+        ) : (
+          <div className="album-card">
+            <img src={ albumInfo.artworkUrl100 } alt={ albumInfo.collectionName } />
+            <h2 data-testid="album-name">{albumInfo.collectionName}</h2>
+            <h3 data-testid="artist-name">{albumInfo.artistName}</h3>
+            {musicsList}
+          </div>
+        )}
       </div>
     );
   }
